@@ -71,9 +71,17 @@ func (m *model) moveSnake() {
 		X: head.X + m.dir.X,
 		Y: head.Y + m.dir.Y,
 	}
-
+	if m.hitWall(newHead) {
+		fmt.Println("Game Over")
+		return
+	}
 	m.snake = append([]Coord{newHead}, m.snake...)
 	m.snake = m.snake[:len(m.snake)-1]
+}
+
+func (m model) hitWall(head Coord) bool {
+	return head.X < 0 || head.X >= width ||
+		head.Y < 0 || head.Y >= height
 }
 
 func (m model) isSnake(x, y int) bool {
