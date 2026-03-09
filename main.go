@@ -7,22 +7,30 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+const (
+	width  = 20
+	height = 10
+)
+
 type Coord struct {
-	x int
-	y int
-}
-
-func (c *Coord) updatex() {
-	c.x++
-}
-
-func (c *Coord) updatey() {
-	c.y++
+	X int
+	Y int
 }
 
 type model struct {
-	lastKey string
-	coord   Coord
+	snake []Coord
+	dir   Coord
+}
+
+func initialModel() model {
+	return model{
+		snake: []Coord{
+			{10, 5},
+			{9, 5},
+			{8, 5},
+		},
+		dir: Coord{1, 0},
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -33,37 +41,70 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+
 		case "ctrl+c", "q":
 			return m, tea.Quit
+
 		case "up":
-			m.coord.updatex()
+			m.dir = Coord{0, -1}
+
 		case "down":
-			m.lastKey = "Down key pressed"
+			m.dir = Coord{0, 1}
+
 		case "left":
-			m.lastKey = "Left key pressed"
+			m.dir = Coord{-1, 0}
+
 		case "right":
-			m.coord.updatey()
-		case "enter":
-			m.lastKey = "Enter key pressed"
-		case " ":
-			m.lastKey = "Space key pressed"
-		default:
-			m.lastKey = fmt.Sprintf("%q key pressed", msg.String())
+			m.dir = Coord{1, 0}
 		}
+
+		m.moveSnake()
 	}
+
 	return m, nil
 }
 
+func (m *model) moveSnake() {
+	head := m.snake[0]
+
+	newHead := Coord{
+		X: head.X + m.dir.X,
+		Y: head.Y + m.dir.Y,
+	}
+
+	m.snake = append([]Coord{newHead}, m.snake...)
+	m.snake = m.snake[:len(m.snake)-1]
+}
+
+func (m model) isSnake(x, y int) bool {
+	for _, s := range m.snake {
+		if s.X == x && s.Y == y {
+			return true
+		}
+	}
+	return false
+}
+
 func (m model) View() string {
-	return fmt.Sprintf(
-		"X: %d\nY: %d\n\nPress q to quit.\n",
-		m.coord.x,
-		m.coord.y,
-	)
+	out := ""
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			if m.isSnake(x, y) {
+				out += "█"
+			} else {
+				out += "-"
+			}
+		}
+		out += "\n"
+	}
+
+	return out + "\nPress arrows to move • q to quit\n"
 }
 
 func main() {
-	p := tea.NewProgram(model{})
+	p := tea.NewProgram(initialModel())
+
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
