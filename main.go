@@ -7,8 +7,22 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type Coord struct {
+	x int
+	y int
+}
+
+func (c *Coord) updatex() {
+	c.x++
+}
+
+func (c *Coord) updatey() {
+	c.y++
+}
+
 type model struct {
 	lastKey string
+	coord   Coord
 }
 
 func (m model) Init() tea.Cmd {
@@ -22,13 +36,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "up":
-			m.lastKey = "Up key pressed"
+			m.coord.updatex()
 		case "down":
 			m.lastKey = "Down key pressed"
 		case "left":
 			m.lastKey = "Left key pressed"
 		case "right":
-			m.lastKey = "Right key pressed"
+			m.coord.updatey()
 		case "enter":
 			m.lastKey = "Enter key pressed"
 		case " ":
@@ -41,10 +55,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	if m.lastKey == "" {
-		return "Press any key...\n\nPress q to quit.\n"
-	}
-	return fmt.Sprintf("%s\n\nPress q to quit.\n", m.lastKey)
+	return fmt.Sprintf(
+		"X: %d\nY: %d\n\nPress q to quit.\n",
+		m.coord.x,
+		m.coord.y,
+	)
 }
 
 func main() {
